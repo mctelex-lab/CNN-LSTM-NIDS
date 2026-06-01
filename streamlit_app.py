@@ -224,7 +224,7 @@ def build_cnn_lstm_model_from_architecture(input_dim, output_units, activation):
 
 @st.cache_resource
 def load_models():
-    """Load all models and artifacts"""
+    """Load all models and artifacts with robust error handling for TF 2.18+"""
     models = {}
     scalers = {}
     imputers = {}
@@ -280,18 +280,31 @@ def load_models():
             activation = 'softmax' if config['is_multiclass'] else 'sigmoid'
             input_dim = len(features[dataset_name])
            
-            # 3. Build Model
+            # 3. Build Model Architecture First
             model = build_cnn_lstm_model_from_architecture(input_dim, output_units, activation)
-           
-            # 4. Load Weights
+            
+            # 4. Load Weights with Compatibility Flags
             if os.path.exists(files['weights']):
                 try:
+                    # Create a dummy input to build the model weights internally
+                    # This ensures layers are initialized before loading
+                    dummy_input = np.zeros((1, input_dim))
+                    _ = model(dummy_input, training=False)
+                    
+                    # Load weights
                     model.load_weights(files['weights'])
                     models[dataset_name] = model
                     st.success(f"✅ Loaded model weights for {dataset_name}")
                 except Exception as w_err:
                     st.error(f"❌ Failed to load weights for {dataset_name}: {str(w_err)}")
-                    st.info("Check if your TensorFlow version matches the version used during training.")
+                    st.info("Tip: Ensure TF version matches training. Trying to load with skip_mismatch...")
+                    try:
+                        # Fallback: Try loading with skip_mismatch if strict loading fails
+                        model.load_weights(files['weights'], skip_mismatch=True, by_name=True)
+                        models[dataset_name] = model
+                        st.success(f"✅ Loaded model weights for {dataset_name} (with mismatch skip)")
+                    except Exception as e2:
+                        st.error(f"❌ Critical Load Error: {str(e2)}")
             else:
                 st.warning(f"⚠️ Weight file not found for {dataset_name}: {files['weights']}")
            
@@ -303,6 +316,8 @@ def load_models():
                
         except Exception as e:
             st.error(f"❌ Critical error loading {dataset_name}: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
    
     return models, scalers, imputers, features, class_names
 
