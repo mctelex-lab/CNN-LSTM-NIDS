@@ -167,8 +167,6 @@ def generate_synthetic_traffic(n_samples=10, feature_names=None, dataset_type="C
             data[feat] = np.random.randint(1024, 65535, size=n_samples).astype(float)
             
         # 6. Protocol/Label (If categorical strings exist in features, map to numeric if needed)
-        # Note: Most ML models require numeric inputs. If your features are strings like 'TCP',
-        # they should have been encoded during training. Here we assume numeric inputs for the model.
         else:
             # Default: Small random floats between 0 and 1
             data[feat] = np.random.uniform(0, 1, size=n_samples)
@@ -262,13 +260,19 @@ def load_models():
         try:
             files = config['files']
            
-            # Check if essential files exist
-            if not os.path.exists(files['features']) or not os.path.exists(files['classes']):
+            # 1. Check Feature Names
+            if not os.path.exists(files['features']):
+                st.warning(f"⚠️ Missing feature file for {dataset_name}: {files['features']}")
                 continue
-                
+            
             with open(files['features'], 'r') as f:
                 features[dataset_name] = json.load(f)
            
+            # 2. Check Class Names
+            if not os.path.exists(files['classes']):
+                st.warning(f"⚠️ Missing class file for {dataset_name}: {files['classes']}")
+                continue
+                
             with open(files['classes'], 'r') as f:
                 class_names[dataset_name] = json.load(f)
            
@@ -276,22 +280,29 @@ def load_models():
             activation = 'softmax' if config['is_multiclass'] else 'sigmoid'
             input_dim = len(features[dataset_name])
            
+            # 3. Build Model
             model = build_cnn_lstm_model_from_architecture(input_dim, output_units, activation)
            
+            # 4. Load Weights
             if os.path.exists(files['weights']):
-                model.load_weights(files['weights'])
-                models[dataset_name] = model
+                try:
+                    model.load_weights(files['weights'])
+                    models[dataset_name] = model
+                    st.success(f"✅ Loaded model weights for {dataset_name}")
+                except Exception as w_err:
+                    st.error(f"❌ Failed to load weights for {dataset_name}: {str(w_err)}")
+                    st.info("Check if your TensorFlow version matches the version used during training.")
             else:
-                # If weights missing, we can still load structure for demo, but mark as incomplete
-                pass
+                st.warning(f"⚠️ Weight file not found for {dataset_name}: {files['weights']}")
            
+            # 5. Load Scaler/Imputer
             if os.path.exists(files['scaler']):
                 scalers[dataset_name] = joblib.load(files['scaler'])
             if os.path.exists(files['imputer']):
                 imputers[dataset_name] = joblib.load(files['imputer'])
                
         except Exception as e:
-            st.warning(f"Could not load full model for {dataset_name}. Error: {str(e)}")
+            st.error(f"❌ Critical error loading {dataset_name}: {str(e)}")
    
     return models, scalers, imputers, features, class_names
 
@@ -300,8 +311,8 @@ def load_models():
 # =============================================================================
 def check_xai_files(dataset_name):
     """Check if XAI files exist and return status"""
-    lime_dir = f'XAI_results/lime_{dataset_name}'
-    shap_dir = f'XAI_results/shap_{dataset_name}'
+    lime_dir = os.path.join('XAI_results', f'lime_{dataset_name}')
+    shap_dir = os.path.join('XAI_results', f'shap_{dataset_name}')
    
     lime_status = {
         'exists': os.path.exists(lime_dir),
@@ -311,9 +322,9 @@ def check_xai_files(dataset_name):
    
     shap_status = {
         'exists': os.path.exists(shap_dir),
-        'has_summary': os.path.exists(f'{shap_dir}/shap_summary.png') if os.path.exists(shap_dir) else False,
-        'has_bar': os.path.exists(f'{shap_dir}/shap_bar_plot.png') if os.path.exists(shap_dir) else False,
-        'has_json': os.path.exists(f'{shap_dir}/feature_importance.json') if os.path.exists(shap_dir) else False
+        'has_summary': os.path.exists(os.path.join(shap_dir, 'shap_summary.png')) if os.path.exists(shap_dir) else False,
+        'has_bar': os.path.exists(os.path.join(shap_dir, 'shap_bar_plot.png')) if os.path.exists(shap_dir) else False,
+        'has_json': os.path.exists(os.path.join(shap_dir, 'feature_importance.json')) if os.path.exists(shap_dir) else False
     }
    
     return lime_status, shap_status
@@ -380,6 +391,7 @@ def main():
             st.session_state.total_packets = 0
             st.session_state.threats = 0
             st.session_state.logs = []
+            st.session_state.last_synthetic_df = None
 
         # Simulate Live Button
         if st.button("▶️ Start Live Simulation", type="primary"):
@@ -402,6 +414,9 @@ def main():
                     n_samples=50, 
                     feature_names=generic_features
                 )
+            
+            # Store for viewing
+            st.session_state.last_synthetic_df = synthetic_df
             
             for i in range(50):
                 # Update Progress
@@ -491,6 +506,14 @@ def main():
         else:
             st.info("Click 'Start Live Simulation' to begin monitoring.")
 
+        # NEW: View Synthetic Data Button
+        if st.session_state.last_synthetic_df is not None:
+            st.markdown("---")
+            with st.expander("🔍 View Generated Synthetic Data Sample"):
+                st.write("The following data was generated to match the model's expected features:")
+                st.dataframe(st.session_state.last_synthetic_df.head(10), use_container_width=True)
+                st.caption(f"Total Features Generated: {len(st.session_state.last_synthetic_df.columns)}")
+
     # ========================================================================
     # TAB 2: BATCH ANALYSIS (FILE UPLOAD)
     # ========================================================================
@@ -570,12 +593,12 @@ def main():
                 st.markdown("#### 📋 LIME Local Explanations")
                 st.caption("Explains individual predictions (Why was this flagged?)")
                 
-                lime_dir = f'XAI_results/lime_{dataset_choice}'
+                lime_dir = os.path.join('XAI_results', f'lime_{dataset_choice}')
                 if os.path.exists(lime_dir):
                     lime_files = [f for f in os.listdir(lime_dir) if f.endswith('.png') and 'summary' not in f]
                     if lime_files:
                         selected_sample = st.selectbox("Select Sample ID", lime_files)
-                        st.image(f'{lime_dir}/{selected_sample}', use_container_width=True)
+                        st.image(os.path.join(lime_dir, selected_sample), use_container_width=True)
                     else:
                         st.warning("No LIME visualization files found.")
                 else:
@@ -585,13 +608,13 @@ def main():
                 st.markdown("#### 📊 SHAP Global Feature Importance")
                 st.caption("Identifies most influential features across the dataset")
                 
-                shap_dir = f'XAI_results/shap_{dataset_choice}'
+                shap_dir = os.path.join('XAI_results', f'shap_{dataset_choice}')
                 if os.path.exists(shap_dir):
-                    if os.path.exists(f'{shap_dir}/shap_bar_plot.png'):
-                        st.image(f'{shap_dir}/shap_bar_plot.png', use_container_width=True)
+                    if os.path.exists(os.path.join(shap_dir, 'shap_bar_plot.png')):
+                        st.image(os.path.join(shap_dir, 'shap_bar_plot.png'), use_container_width=True)
                     
-                    if os.path.exists(f'{shap_dir}/feature_importance.json'):
-                        with open(f'{shap_dir}/feature_importance.json', 'r') as f:
+                    if os.path.exists(os.path.join(shap_dir, 'feature_importance.json')):
+                        with open(os.path.join(shap_dir, 'feature_importance.json'), 'r') as f:
                             importance = json.load(f)
                         st.markdown("**Top 5 Critical Features:**")
                         for i, (feature, score) in enumerate(list(importance.items())[:5], 1):
