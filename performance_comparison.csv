@@ -1,0 +1,8 @@
+Metric,CIC-IDS-2018,NF-UQ-NIDS
+Accuracy,0.9998,0.9629
+Balanced Accuracy,0.9999,0.9693
+F1-Macro,0.9998,0.9590
+F1-Weighted,0.9998,0.9633
+MCC,0.9997,0.9201
+ROC-AUC,1.0000,0.9959
+Latency (ms),75.26,77.42

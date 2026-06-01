@@ -1,0 +1,14 @@
+{
+  "model_name": "CNN-LSTM_IDS_Hybrid",
+  "architecture": "1D CNN + LSTM with Dual XAI",
+  "tensorflow_version": "2.19.0",
+  "export_timestamp": "2026-06-01T10:47:30.575130",
+  "datasets": [
+    "CIC-IDS-2018",
+    "NF-UQ-NIDS"
+  ],
+  "xai_methods": [
+    "LIME",
+    "SHAP"
+  ]
+}
