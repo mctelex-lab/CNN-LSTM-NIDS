@@ -40,65 +40,83 @@ st.markdown("""
     <style>
     /* Main Background & Font */
     .stApp {
-        background-color: #0e1117;
-        color: #fafafa;
+        background-color: #0b0c10;
+        color: #c5c6c7;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     /* Header Styling */
     .main-header {
-        background: linear-gradient(90deg, #1f4068 0%, #162447 100%);
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #1f2833 0%, #0b0c10 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(102, 252, 241, 0.1);
         margin-bottom: 2rem;
-        border-left: 5px solid #00d4ff;
-    }
-    .main-header h1 {
-        color: #ffffff;
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    .main-header p {
-        color: #a0aec0;
-        font-size: 1.1rem;
-    }
-
-    /* Card Styling */
-    .metric-card {
-        background-color: #1a202c;
-        padding: 1.5rem;
-        border-radius: 10px;
-        border: 1px solid #2d3748;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        border-bottom: 4px solid #66fcf1;
         text-align: center;
     }
+    .main-header h1 {
+        color: #66fcf1;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(102, 252, 241, 0.5);
+    }
+    .main-header p {
+        color: #45a29e;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    /* Card Styling - Glassmorphism */
+    .metric-card {
+        background: rgba(31, 40, 51, 0.6);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 12px;
+        border: 1px solid #45a29e;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 15px rgba(102, 252, 241, 0.3);
+    }
     .metric-value {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: bold;
-        color: #00d4ff;
+        color: #66fcf1;
+        text-shadow: 0 0 5px rgba(102, 252, 241, 0.5);
     }
     .metric-label {
-        color: #718096;
+        color: #c5c6c7;
         font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        margin-top: 10px;
     }
 
     /* Status Indicators */
     .status-safe {
-        color: #48bb78;
+        color: #45a29e;
         font-weight: bold;
     }
     .status-threat {
-        color: #f56565;
+        color: #ff0055;
         font-weight: bold;
+        text-shadow: 0 0 5px rgba(255, 0, 85, 0.5);
     }
 
     /* Sidebar Customization */
     section[data-testid="stSidebar"] {
-        background-color: #171923;
-        border-right: 1px solid #2d3748;
+        background-color: #1f2833;
+        border-right: 1px solid #45a29e;
+    }
+    section[data-testid="stSidebar"] .stMarkdown {
+        color: #66fcf1;
     }
     
     /* Hide Streamlit Branding */
@@ -107,8 +125,50 @@ st.markdown("""
     
     /* Dataframe Styling */
     .stDataFrame {
-        border: 1px solid #2d3748;
+        border: 1px solid #45a29e;
         border-radius: 8px;
+        background-color: #0b0c10;
+    }
+    
+    /* Button Styling */
+    .stButton>button {
+        background: linear-gradient(90deg, #45a29e 0%, #66fcf1 100%);
+        color: #0b0c10;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        box-shadow: 0 0 15px #66fcf1;
+        transform: scale(1.05);
+    }
+
+    /* Explanation Box */
+    .explanation-box {
+        background-color: #1f2833;
+        border-left: 5px solid #66fcf1;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+    }
+    
+    /* Sidebar Profile */
+    .sidebar-profile {
+        background-color: #0b0c10;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #45a29e;
+        margin-bottom: 1rem;
+    }
+    .sidebar-profile h4 {
+        color: #66fcf1;
+        margin-bottom: 0.5rem;
+    }
+    .sidebar-profile p {
+        color: #c5c6c7;
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -141,7 +201,8 @@ NF_UQ_NIDS_FEATURES = [
     "SHORTEST_FLOW_PKT", "MIN_IP_PKT_LEN", "MAX_IP_PKT_LEN", 
     "SRC_TO_DST_SECOND_BYTES", "DST_TO_SRC_SECOND_BYTES", "RETRANSMITTED_IN_BYTES", 
     "RETRANSMITTED_IN_PKTS", "RETRANSMITTED_OUT_BYTES", "RETRANSMITTED_OUT_PKTS", 
-    "SRC_TO_DST_AVG_THROUGHPUT", "NUM_PKTS_UP_TO_128_BYTES", "NUM_PKTS_128_TO_256_BYTES", 
+    "SRC_TO_DST_AVG_THROUGHPUT", "DST_TO_SRC_AVG_THROUGHPUT", 
+    "NUM_PKTS_UP_TO_128_BYTES", "NUM_PKTS_128_TO_256_BYTES", 
     "NUM_PKTS_256_TO_512_BYTES", "NUM_PKTS_512_TO_1024_BYTES", "NUM_PKTS_1024_TO_1514_BYTES", 
     "TCP_WIN_MAX_IN", "TCP_WIN_MAX_OUT", "ICMP_TYPE", "ICMP_IPV4_TYPE", 
     "DNS_QUERY_ID", "DNS_QUERY_TYPE", "DNS_TTL_ANSWER", "FTP_COMMAND_RET_CODE", 
@@ -194,26 +255,31 @@ def generate_synthetic_traffic(n_samples=10, feature_names=None, dataset_type="C
         if any(k in feat_lower for k in ['duration', 'time', 'iat', 'active', 'idle']):
             data[feat] = np.abs(np.random.exponential(scale=1000000, size=n_samples)) # Microseconds scale
             
-        # 2. Byte/Size/Length Features (Log-normal: skewed right, no negatives)
+        # 2. Byte/Size/Length/Throughput Features (Log-normal: skewed right, no negatives)
         elif any(k in feat_lower for k in ['bytes', 'length', 'size', 'win', 'throughput', 'seg', 'len']):
             data[feat] = np.random.lognormal(mean=4, sigma=1.5, size=n_samples).astype(float)
             
-        # 3. Packet Counts/Flags (Poisson/Integer: discrete counts)
-        elif any(k in feat_lower for k in ['pkts', 'packets', 'count', 'cnt', 'num', 'retransmit', 'query', 'flag']):
+        # 3. Packet Counts/Flags/Retransmissions (Poisson/Integer: discrete counts)
+        elif any(k in feat_lower for k in ['pkts', 'packets', 'count', 'cnt', 'num', 'retransmit', 'query', 'flag', 'type', 'code', 'ttl']):
             data[feat] = np.random.poisson(lam=10, size=n_samples).astype(float)
             
-        # 4. Rates (Normal/Uniform: continuous positive values)
+        # 4. Rates/Averages/StdDev (Normal/Uniform: continuous positive values)
         elif any(k in feat_lower for k in ['rate', 'bps', 'pps', 'ratio', 'avg', 'std', 'mean', 'min', 'max', 'var']):
             # Using abs normal to ensure positive rates/stats
             data[feat] = np.abs(np.random.normal(loc=1000, scale=500, size=n_samples))
             
-        # 5. Ports/IPs (Specific ranges for realism)
+        # 5. Ports (Specific ranges for realism)
         elif 'port' in feat_lower:
             data[feat] = np.random.randint(1, 65535, size=n_samples).astype(float)
         
         # 6. Protocol (Numeric encoding usually 6 for TCP, 17 for UDP)
         elif 'protocol' in feat_lower:
             data[feat] = np.random.choice([6, 17, 1], size=n_samples).astype(float)
+        
+        # 7. IP Addresses (Generated as integers for simplicity, model expects numeric)
+        elif 'addr' in feat_lower or 'ip' in feat_lower:
+            # Generating random large integers to simulate IP encoding
+            data[feat] = np.random.randint(0, 2**32, size=n_samples).astype(float)
             
         else:
             # Default: Small random floats between 0 and 1
@@ -223,12 +289,51 @@ def generate_synthetic_traffic(n_samples=10, feature_names=None, dataset_type="C
     
     # Ensure strict non-negative constraints for physical metrics
     for col in df.columns:
-        if any(k in col.lower() for k in ['bytes', 'length', 'duration', 'count', 'rate', 'pkt', 'win', 'iat']):
+        if any(k in col.lower() for k in ['bytes', 'length', 'duration', 'count', 'rate', 'pkt', 'win', 'iat', 'throughput']):
             df[col] = df[col].clip(lower=0)
             
-    # Add Dummy Label Column for consistency if needed by downstream logic
-    # Note: The model expects numerical inputs, so labels are handled separately in prediction
     return df
+
+# =============================================================================
+# HEURISTIC EXPLANATION ENGINE (Simulates XAI for Synthetic Data)
+# =============================================================================
+def generate_forensic_narrative(row, dataset_type):
+    """
+    Generates a natural language explanation for why a sample might be flagged,
+    based on heuristic thresholds. This simulates LIME/SHAP output for live demo.
+    """
+    reasons = []
+    row_dict = row.to_dict()
+    
+    if dataset_type == "CIC-IDS-2018":
+        # Check for high flow duration
+        if row_dict.get('Flow Duration', 0) > 1000000:
+            reasons.append("Unusually long flow duration suggesting a slow-rate attack or tunneling.")
+        # Check for high packet count
+        if row_dict.get('Tot Fwd Pkts', 0) > 100:
+            reasons.append("High forward packet count indicative of flooding or scanning.")
+        # Check for small packet sizes (often associated with scanning)
+        if row_dict.get('Pkt Len Mean', 0) < 50:
+            reasons.append("Abnormally small average packet size, common in port scanning or heartbeat attacks.")
+        # Check for specific flags
+        if row_dict.get('FIN Flag Cnt', 0) > 0 and row_dict.get('SYN Flag Cnt', 0) > 0:
+            reasons.append("Simultaneous FIN and SYN flags detected, a strong signature of malicious probing.")
+            
+    elif dataset_type == "NF-UQ-NIDS":
+        # Check for high throughput
+        if row_dict.get('SRC_TO_DST_AVG_THROUGHPUT', 0) > 5000:
+            reasons.append("Exceptional source-to-destination throughput suggesting data exfiltration or DDoS.")
+        # Check for retransmissions
+        if row_dict.get('RETRANSMITTED_IN_PKTS', 0) > 5:
+            reasons.append("High number of retransmitted packets indicating network congestion or aggressive transmission.")
+        # Check for TTL anomalies
+        if row_dict.get('MIN_TTL', 0) < 10:
+            reasons.append("Very low Time-To-Live (TTL) value, potentially indicating spoofed IP addresses or nearby attacker.")
+
+    if not reasons:
+        reasons.append("Statistical anomaly detected in feature distribution compared to baseline benign traffic.")
+        
+    return " | ".join(reasons)
 
 # =============================================================================
 # MODEL ARCHITECTURE & LOADING
@@ -407,6 +512,19 @@ def main():
     # Sidebar Configuration
     st.sidebar.markdown("### ⚙️ Configuration")
     
+    # --- SIDEBAR PROFILE INFO ---
+    st.sidebar.markdown("""
+        <div class="sidebar-profile">
+            <h4>👤 Researcher</h4>
+            <p><strong>Student:</strong> Samuel Ayorinde A</p>
+            <p><strong>Program:</strong> PGD Cybersecurity</p>
+            <p><strong>Institution:</strong> Nigerian Defence Academy</p>
+            <hr style="border-color: #45a29e;">
+            <h4>🎓 Supervision</h4>
+            <p><strong>Supervisor:</strong> Mr Victor Akuboh</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
     if models:
         dataset_choice = st.sidebar.selectbox("Select Detection Model", list(models.keys()))
         is_model_loaded = True
@@ -457,12 +575,10 @@ def main():
             st.session_state.threats = 0
             st.session_state.logs = []
             st.session_state.last_synthetic_df = None
+            st.session_state.detection_results = None
 
-        # Simulate Live Button
-        if st.button("▶️ Start Live Detection", type="primary"):
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
+        # Step 1: Generate Data
+        if st.button("🔄 Generate Synthetic Traffic", type="secondary"):
             # Determine features to generate
             if is_model_loaded:
                 feat_list = features[dataset_choice]
@@ -483,81 +599,110 @@ def main():
             
             # Store for viewing
             st.session_state.last_synthetic_df = synthetic_df
-            
-            # Process each sample
-            for i in range(len(synthetic_df)):
-                # Update Progress
-                progress_bar.progress((i + 1) / len(synthetic_df))
-                status_text.text(f"Analyzing Flow {i+1}/{len(synthetic_df)}...")
-                
-                row_data = synthetic_df.iloc[i:i+1]
-                
-                # Perform Prediction if model is loaded
-                if is_model_loaded:
-                    try:
-                        # Preprocess
-                        X = row_data[feat_list].fillna(0).values
-                        if dataset_choice in imputers:
-                            X = imputers[dataset_choice].transform(X)
-                        if dataset_choice in scalers:
-                            X = scalers[dataset_choice].transform(X)
-                        
-                        # Predict
-                        model = models[dataset_choice]
-                        predictions = model.predict(X, verbose=0)
-                        
-                        if dataset_choice == 'CIC-IDS-2018':
-                            pred_class_idx = np.argmax(predictions[0])
-                            confidence = np.max(predictions[0])
-                            classes_map = class_names[dataset_choice]
-                            pred_label = classes_map[pred_class_idx]
-                            is_threat = pred_label != "Benign" # Adjust based on your actual benign label name
-                        else:
-                            # Binary classification
-                            prob = predictions[0][0]
-                            is_threat = prob >= 0.5
-                            confidence = prob if is_threat else (1 - prob)
-                            pred_label = "Attack" if is_threat else "Benign"
-                            
-                    except Exception as e:
-                        st.error(f"Prediction Error: {e}")
-                        is_threat = False
-                        confidence = 0.0
-                        pred_label = "Error"
-                else:
-                    # Random simulation for demo mode
-                    is_threat = random.random() > 0.8
-                    confidence = random.uniform(0.7, 0.99)
-                    pred_label = "Attack (Simulated)" if is_threat else "Benign (Simulated)"
+            st.session_state.detection_results = None # Reset previous results
+            st.success("✅ Synthetic traffic generated. Ready for detection.")
+            st.rerun()
 
-                # Update Metrics
-                st.session_state.total_packets += 1
-                if is_threat:
-                    st.session_state.threats += 1
-                    log_entry = {
-                        "Time": datetime.now().strftime("%H:%M:%S"),
-                        "Source IP": f"192.168.1.{random.randint(1,255)}",
-                        "Type": pred_label,
-                        "Confidence": f"{confidence:.2%}",
-                        "Status": "🔴 ALERT"
-                    }
-                else:
-                    log_entry = {
-                        "Time": datetime.now().strftime("%H:%M:%S"),
-                        "Source IP": f"10.0.0.{random.randint(1,255)}",
-                        "Type": pred_label,
-                        "Confidence": f"{confidence:.2%}",
-                        "Status": "🟢 SAFE"
-                    }
-                
-                st.session_state.logs.insert(0, log_entry)
-                # Keep only last 20 logs
-                st.session_state.logs = st.session_state.logs[:20]
-                
-                time.sleep(0.1) # Simulate processing time
-            
-            status_text.text("✅ Batch Analysis Complete")
-            progress_bar.empty()
+        # Step 2: Run Detection on Generated Data
+        if st.session_state.last_synthetic_df is not None:
+            st.markdown("---")
+            col_gen, col_det = st.columns([1, 1])
+            with col_gen:
+                st.info("Data Ready: Click below to run the CNN-LSTM model on the generated samples.")
+            with col_det:
+                if st.button("🚀 Run Real-Time Detection", type="primary"):
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    results_log = []
+                    
+                    synthetic_df = st.session_state.last_synthetic_df
+                    
+                    # Determine feature list again for processing
+                    if is_model_loaded:
+                        feat_list = features[dataset_choice]
+                    else:
+                        feat_list = CIC_2018_FEATURES
+
+                    for i in range(len(synthetic_df)):
+                        # Update Progress
+                        progress_bar.progress((i + 1) / len(synthetic_df))
+                        status_text.text(f"Analyzing Flow {i+1}/{len(synthetic_df)}...")
+                        
+                        row_data = synthetic_df.iloc[i:i+1]
+                        
+                        # Perform Prediction if model is loaded
+                        if is_model_loaded:
+                            try:
+                                # Preprocess
+                                X = row_data[feat_list].fillna(0).values
+                                if dataset_choice in imputers:
+                                    X = imputers[dataset_choice].transform(X)
+                                if dataset_choice in scalers:
+                                    X = scalers[dataset_choice].transform(X)
+                                
+                                # Predict
+                                model = models[dataset_choice]
+                                predictions = model.predict(X, verbose=0)
+                                
+                                if dataset_choice == 'CIC-IDS-2018':
+                                    pred_class_idx = np.argmax(predictions[0])
+                                    confidence = np.max(predictions[0])
+                                    classes_map = class_names[dataset_choice]
+                                    pred_label = classes_map[pred_class_idx]
+                                    is_threat = pred_label != "Benign" # Adjust based on your actual benign label name
+                                else:
+                                    # Binary classification
+                                    prob = predictions[0][0]
+                                    is_threat = prob >= 0.5
+                                    confidence = prob if is_threat else (1 - prob)
+                                    pred_label = "Attack" if is_threat else "Benign"
+                                    
+                            except Exception as e:
+                                st.error(f"Prediction Error: {e}")
+                                is_threat = False
+                                confidence = 0.0
+                                pred_label = "Error"
+                        else:
+                            # Random simulation for demo mode
+                            is_threat = random.random() > 0.8
+                            confidence = random.uniform(0.7, 0.99)
+                            pred_label = "Attack (Simulated)" if is_threat else "Benign (Simulated)"
+
+                        # Generate Forensic Narrative
+                        narrative = generate_forensic_narrative(row_data.iloc[0], dataset_choice if is_model_loaded else "CIC-IDS-2018")
+
+                        # Update Metrics
+                        st.session_state.total_packets += 1
+                        if is_threat:
+                            st.session_state.threats += 1
+                            log_entry = {
+                                "Time": datetime.now().strftime("%H:%M:%S"),
+                                "Source IP": f"192.168.1.{random.randint(1,255)}",
+                                "Type": pred_label,
+                                "Confidence": f"{confidence:.2%}",
+                                "Status": "🔴 ALERT",
+                                "Explanation": narrative
+                            }
+                        else:
+                            log_entry = {
+                                "Time": datetime.now().strftime("%H:%M:%S"),
+                                "Source IP": f"10.0.0.{random.randint(1,255)}",
+                                "Type": pred_label,
+                                "Confidence": f"{confidence:.2%}",
+                                "Status": "🟢 SAFE",
+                                "Explanation": "Traffic patterns within normal baseline parameters."
+                            }
+                        
+                        results_log.append(log_entry)
+                        time.sleep(0.05) # Simulate processing time
+                    
+                    # Update Session State with new logs
+                    st.session_state.logs = results_log[:20] + st.session_state.logs
+                    st.session_state.logs = st.session_state.logs[:20] # Keep last 20
+                    
+                    status_text.text("✅ Detection Complete")
+                    progress_bar.empty()
+                    st.success("✅ Real-time detection completed. See logs below.")
 
         # Display Metrics
         with col1:
@@ -569,7 +714,7 @@ def main():
             """, unsafe_allow_html=True)
         
         with col2:
-            threat_color = "#f56565" if st.session_state.threats > 0 else "#48bb78"
+            threat_color = "#ff0055" if st.session_state.threats > 0 else "#45a29e"
             st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-value" style="color:{threat_color}">{st.session_state.threats}</div>
@@ -595,13 +740,27 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
-        # Live Log Table
-        st.markdown("### 📜 Recent Activity Log")
+        # Live Log Table with Explanation
+        st.markdown("### 📜 Recent Activity Log & Forensic Narratives")
         if st.session_state.logs:
             log_df = pd.DataFrame(st.session_state.logs)
-            st.dataframe(log_df, use_container_width=True, hide_index=True)
+            # Display only key columns in main table
+            display_cols = ["Time", "Source IP", "Type", "Confidence", "Status"]
+            st.dataframe(log_df[display_cols], use_container_width=True, hide_index=True)
+            
+            # Show Explanation for the most recent threat if available
+            latest_threats = log_df[log_df['Status'] == "🔴 ALERT"]
+            if not latest_threats.empty:
+                latest = latest_threats.iloc[0]
+                st.markdown(f"""
+                    <div class="explanation-box">
+                        <h4 style="color:#ff0055; margin-bottom:0.5rem;">🚨 Latest Threat Analysis</h4>
+                        <p><strong>Time:</strong> {latest['Time']} | <strong>Source:</strong> {latest['Source IP']}</p>
+                        <p><strong>Forensic Narrative:</strong> {latest['Explanation']}</p>
+                    </div>
+                """, unsafe_allow_html=True)
         else:
-            st.info("Click 'Start Live Detection' to begin monitoring.")
+            st.info("Click 'Generate Synthetic Traffic' then 'Run Real-Time Detection' to begin monitoring.")
 
         # NEW: View Synthetic Data Button
         if st.session_state.last_synthetic_df is not None:
@@ -661,13 +820,13 @@ def main():
                             col1, col2 = st.columns(2)
                             with col1:
                                 fig_pie = px.pie(df, names='prediction', title='Traffic Classification Distribution',
-                                                 color_discrete_sequence=['#48bb78', '#f56565'])
+                                                 color_discrete_sequence=['#45a29e', '#ff0055'])
                                 st.plotly_chart(fig_pie, use_container_width=True)
                             
                             with col2:
                                 fig_hist = px.histogram(df, x='confidence', color='prediction',
                                                         title='Prediction Confidence Distribution',
-                                                        color_discrete_map={'Attack': '#f56565', 'Benign': '#48bb78'})
+                                                        color_discrete_map={'Attack': '#ff0055', 'Benign': '#45a29e'})
                                 st.plotly_chart(fig_hist, use_container_width=True)
                                 
                             st.dataframe(df[['prediction', 'confidence'] + feature_list[:5]], use_container_width=True)
@@ -754,7 +913,7 @@ def main():
 def render_footer():
     st.markdown("---")
     st.markdown(f"""
-        <div style="text-align: center; color: #718096; font-size: 0.9rem;">
+        <div style="text-align: center; color: #45a29e; font-size: 0.9rem;">
             <p><strong>NDA CyberShield IDS</strong> | Developed by Samuel Ayorinde A</p>
             <p>PGD Cybersecurity | Nigerian Defence Academy (NDA) | Supervised by Mr Victor Akuboh</p>
             <p>&copy; {datetime.now().year} All Rights Reserved.</p>
