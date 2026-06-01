@@ -131,42 +131,90 @@ def render_header():
         st.caption(f"System Time: {datetime.now().strftime('%H:%M:%S')}")
 
 # =============================================================================
+# DATASET FEATURE DEFINITIONS
+# =============================================================================
+NF_UQ_NIDS_FEATURES = [
+    "IPV4_SRC_ADDR", "L4_SRC_PORT", "IPV4_DST_ADDR", "L4_DST_PORT", "PROTOCOL", 
+    "L7_PROTO", "IN_BYTES", "IN_PKTS", "OUT_BYTES", "OUT_PKTS", "TCP_FLAGS", 
+    "CLIENT_TCP_FLAGS", "SERVER_TCP_FLAGS", "FLOW_DURATION_MILLISECONDS", 
+    "DURATION_IN", "DURATION_OUT", "MIN_TTL", "MAX_TTL", "LONGEST_FLOW_PKT", 
+    "SHORTEST_FLOW_PKT", "MIN_IP_PKT_LEN", "MAX_IP_PKT_LEN", 
+    "SRC_TO_DST_SECOND_BYTES", "DST_TO_SRC_SECOND_BYTES", "RETRANSMITTED_IN_BYTES", 
+    "RETRANSMITTED_IN_PKTS", "RETRANSMITTED_OUT_BYTES", "RETRANSMITTED_OUT_PKTS", 
+    "SRC_TO_DST_AVG_THROUGHPUT", "NUM_PKTS_UP_TO_128_BYTES", "NUM_PKTS_128_TO_256_BYTES", 
+    "NUM_PKTS_256_TO_512_BYTES", "NUM_PKTS_512_TO_1024_BYTES", "NUM_PKTS_1024_TO_1514_BYTES", 
+    "TCP_WIN_MAX_IN", "TCP_WIN_MAX_OUT", "ICMP_TYPE", "ICMP_IPV4_TYPE", 
+    "DNS_QUERY_ID", "DNS_QUERY_TYPE", "DNS_TTL_ANSWER", "FTP_COMMAND_RET_CODE", 
+    "Label", "Attack", "Dataset"
+]
+
+CIC_2018_FEATURES = [
+    "Dst Port", "Protocol", "Timestamp", "Flow Duration", "Tot Fwd Pkts", 
+    "Tot Bwd Pkts", "TotLen Fwd Pkts", "TotLen Bwd Pkts", "Fwd Pkt Len Max", 
+    "Fwd Pkt Len Min", "Fwd Pkt Len Mean", "Fwd Pkt Len Std", "Bwd Pkt Len Max", 
+    "Bwd Pkt Len Min", "Bwd Pkt Len Mean", "Bwd Pkt Len Std", "Flow Byts/s", 
+    "Flow Pkts/s", "Flow IAT Mean", "Flow IAT Std", "Flow IAT Max", "Flow IAT Min", 
+    "Fwd IAT Tot", "Fwd IAT Mean", "Fwd IAT Std", "Fwd IAT Max", "Fwd IAT Min", 
+    "Bwd IAT Tot", "Bwd IAT Mean", "Bwd IAT Std", "Bwd IAT Max", "Bwd IAT Min", 
+    "Fwd PSH Flags", "Bwd PSH Flags", "Fwd URG Flags", "Bwd URG Flags", 
+    "Fwd Header Len", "Bwd Header Len", "Fwd Pkts/s", "Bwd Pkts/s", "Pkt Len Min", 
+    "Pkt Len Max", "Pkt Len Mean", "Pkt Len Std", "Pkt Len Var", "FIN Flag Cnt", 
+    "SYN Flag Cnt", "RST Flag Cnt", "PSH Flag Cnt", "ACK Flag Cnt", "URG Flag Cnt", 
+    "CWE Flag Count", "ECE Flag Cnt", "Down/Up Ratio", "Pkt Size Avg", 
+    "Fwd Seg Size Avg", "Bwd Seg Size Avg", "Fwd Byts/b Avg", "Fwd Pkts/b Avg", 
+    "Fwd Blk Rate Avg", "Bwd Byts/b Avg", "Bwd Pkts/b Avg", "Bwd Blk Rate Avg", 
+    "Subflow Fwd Pkts", "Subflow Fwd Byts", "Subflow Bwd Pkts", "Subflow Bwd Byts", 
+    "Init Fwd Win Byts", "Init Bwd Win Byts", "Fwd Act Data Pkts", "Fwd Seg Size Min", 
+    "Active Mean", "Active Std", "Active Max", "Active Min", "Idle Mean", "Idle Std", 
+    "Idle Max", "Idle Min", "Label"
+]
+
+# =============================================================================
 # DATA SIMULATOR (For Real-Time Demo)
 # =============================================================================
 def generate_synthetic_traffic(n_samples=10, feature_names=None, dataset_type="CIC-IDS-2018"):
     """
     Generates synthetic network traffic data that mimics the statistical 
-    properties of CIC-IDS-2018 or NF-UQ-NIDS datasets.
+    properties of CIC-IDS-2018 or NF-UQ-NIDS datasets based on provided feature names.
     """
     if feature_names is None:
-        return pd.DataFrame(np.random.rand(n_samples, 10))
+        # Fallback generic features if none provided
+        feature_names = ['Duration', 'Src_Bytes', 'Dst_Bytes', 'Protocol', 'Flag']
 
     data = {}
     
     for feat in feature_names:
+        # Skip target labels during generation, we will add them manually at the end
+        if feat.lower() in ['label', 'attack', 'dataset']:
+            continue
+            
         feat_lower = feat.lower()
         
         # 1. Time/Duration Features (Exponential distribution: many short, few long)
         if any(k in feat_lower for k in ['duration', 'time', 'iat', 'active', 'idle']):
-            data[feat] = np.abs(np.random.exponential(scale=1.0, size=n_samples))
+            data[feat] = np.abs(np.random.exponential(scale=1000000, size=n_samples)) # Microseconds scale
             
         # 2. Byte/Size/Length Features (Log-normal: skewed right, no negatives)
-        elif any(k in feat_lower for k in ['bytes', 'length', 'size', 'win', 'throughput', 'seg']):
+        elif any(k in feat_lower for k in ['bytes', 'length', 'size', 'win', 'throughput', 'seg', 'len']):
             data[feat] = np.random.lognormal(mean=4, sigma=1.5, size=n_samples).astype(float)
             
         # 3. Packet Counts/Flags (Poisson/Integer: discrete counts)
-        elif any(k in feat_lower for k in ['pkts', 'packets', 'count', 'cnt', 'num', 'retransmit', 'query']):
+        elif any(k in feat_lower for k in ['pkts', 'packets', 'count', 'cnt', 'num', 'retransmit', 'query', 'flag']):
             data[feat] = np.random.poisson(lam=10, size=n_samples).astype(float)
             
         # 4. Rates (Normal/Uniform: continuous positive values)
-        elif any(k in feat_lower for k in ['rate', 'bps', 'pps', 'ratio', 'avg']):
+        elif any(k in feat_lower for k in ['rate', 'bps', 'pps', 'ratio', 'avg', 'std', 'mean', 'min', 'max', 'var']):
+            # Using abs normal to ensure positive rates/stats
             data[feat] = np.abs(np.random.normal(loc=1000, scale=500, size=n_samples))
             
-        # 5. Ports/IPs (Specific ranges for realism, though model likely uses encoded/numeric)
+        # 5. Ports/IPs (Specific ranges for realism)
         elif 'port' in feat_lower:
-            data[feat] = np.random.randint(1024, 65535, size=n_samples).astype(float)
+            data[feat] = np.random.randint(1, 65535, size=n_samples).astype(float)
+        
+        # 6. Protocol (Numeric encoding usually 6 for TCP, 17 for UDP)
+        elif 'protocol' in feat_lower:
+            data[feat] = np.random.choice([6, 17, 1], size=n_samples).astype(float)
             
-        # 6. Protocol/Label (If categorical strings exist in features, map to numeric if needed)
         else:
             # Default: Small random floats between 0 and 1
             data[feat] = np.random.uniform(0, 1, size=n_samples)
@@ -175,9 +223,11 @@ def generate_synthetic_traffic(n_samples=10, feature_names=None, dataset_type="C
     
     # Ensure strict non-negative constraints for physical metrics
     for col in df.columns:
-        if any(k in col.lower() for k in ['bytes', 'length', 'duration', 'count', 'rate', 'pkt', 'win']):
+        if any(k in col.lower() for k in ['bytes', 'length', 'duration', 'count', 'rate', 'pkt', 'win', 'iat']):
             df[col] = df[col].clip(lower=0)
             
+    # Add Dummy Label Column for consistency if needed by downstream logic
+    # Note: The model expects numerical inputs, so labels are handled separately in prediction
     return df
 
 # =============================================================================
@@ -397,7 +447,7 @@ def main():
     # ========================================================================
     with tab1:
         st.subheader("📡 Real-Time Network Traffic Simulation")
-        st.markdown("This module simulates live packet inspection using the trained CNN-LSTM model.")
+        st.markdown("This module generates synthetic traffic matching your model's features and performs live detection.")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -409,45 +459,77 @@ def main():
             st.session_state.last_synthetic_df = None
 
         # Simulate Live Button
-        if st.button("▶️ Start Live Simulation", type="primary"):
+        if st.button("▶️ Start Live Detection", type="primary"):
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Generate a batch of synthetic data
+            # Determine features to generate
             if is_model_loaded:
                 feat_list = features[dataset_choice]
-                # Pass dataset type for better heuristic generation
+                # Use the specific feature list for the chosen model
                 synthetic_df = generate_synthetic_traffic(
-                    n_samples=50, 
+                    n_samples=20, 
                     feature_names=feat_list, 
                     dataset_type=dataset_choice
                 )
             else:
-                # In demo mode without models, just generate generic data
-                generic_features = ['Duration', 'Src_Bytes', 'Dst_Bytes', 'Protocol', 'Flag']
+                # In demo mode without models, use CIC features as default generic structure
+                feat_list = CIC_2018_FEATURES
                 synthetic_df = generate_synthetic_traffic(
-                    n_samples=50, 
-                    feature_names=generic_features
+                    n_samples=20, 
+                    feature_names=feat_list,
+                    dataset_type="CIC-IDS-2018"
                 )
             
             # Store for viewing
             st.session_state.last_synthetic_df = synthetic_df
             
-            for i in range(50):
+            # Process each sample
+            for i in range(len(synthetic_df)):
                 # Update Progress
-                progress_bar.progress((i + 1) / 50)
-                status_text.text(f"Analyzing Packet {i+1}/50...")
+                progress_bar.progress((i + 1) / len(synthetic_df))
+                status_text.text(f"Analyzing Flow {i+1}/{len(synthetic_df)}...")
                 
-                # Simulate Prediction (Random for demo, or actual if model loaded)
+                row_data = synthetic_df.iloc[i:i+1]
+                
+                # Perform Prediction if model is loaded
                 if is_model_loaded:
-                    # In a real scenario, we would preprocess and predict here
-                    # For this snippet, we'll simulate a result to keep code concise
-                    is_threat = random.random() > 0.8
-                    confidence = random.uniform(0.7, 0.99)
+                    try:
+                        # Preprocess
+                        X = row_data[feat_list].fillna(0).values
+                        if dataset_choice in imputers:
+                            X = imputers[dataset_choice].transform(X)
+                        if dataset_choice in scalers:
+                            X = scalers[dataset_choice].transform(X)
+                        
+                        # Predict
+                        model = models[dataset_choice]
+                        predictions = model.predict(X, verbose=0)
+                        
+                        if dataset_choice == 'CIC-IDS-2018':
+                            pred_class_idx = np.argmax(predictions[0])
+                            confidence = np.max(predictions[0])
+                            classes_map = class_names[dataset_choice]
+                            pred_label = classes_map[pred_class_idx]
+                            is_threat = pred_label != "Benign" # Adjust based on your actual benign label name
+                        else:
+                            # Binary classification
+                            prob = predictions[0][0]
+                            is_threat = prob >= 0.5
+                            confidence = prob if is_threat else (1 - prob)
+                            pred_label = "Attack" if is_threat else "Benign"
+                            
+                    except Exception as e:
+                        st.error(f"Prediction Error: {e}")
+                        is_threat = False
+                        confidence = 0.0
+                        pred_label = "Error"
                 else:
+                    # Random simulation for demo mode
                     is_threat = random.random() > 0.8
                     confidence = random.uniform(0.7, 0.99)
-                
+                    pred_label = "Attack (Simulated)" if is_threat else "Benign (Simulated)"
+
                 # Update Metrics
                 st.session_state.total_packets += 1
                 if is_threat:
@@ -455,7 +537,7 @@ def main():
                     log_entry = {
                         "Time": datetime.now().strftime("%H:%M:%S"),
                         "Source IP": f"192.168.1.{random.randint(1,255)}",
-                        "Type": "INTRUSION DETECTED",
+                        "Type": pred_label,
                         "Confidence": f"{confidence:.2%}",
                         "Status": "🔴 ALERT"
                     }
@@ -463,7 +545,7 @@ def main():
                     log_entry = {
                         "Time": datetime.now().strftime("%H:%M:%S"),
                         "Source IP": f"10.0.0.{random.randint(1,255)}",
-                        "Type": "Normal Traffic",
+                        "Type": pred_label,
                         "Confidence": f"{confidence:.2%}",
                         "Status": "🟢 SAFE"
                     }
@@ -472,7 +554,7 @@ def main():
                 # Keep only last 20 logs
                 st.session_state.logs = st.session_state.logs[:20]
                 
-                time.sleep(0.05) # Simulate processing time
+                time.sleep(0.1) # Simulate processing time
             
             status_text.text("✅ Batch Analysis Complete")
             progress_bar.empty()
@@ -482,7 +564,7 @@ def main():
             st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-value">{st.session_state.total_packets}</div>
-                    <div class="metric-label">Total Packets</div>
+                    <div class="metric-label">Total Flows</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -519,7 +601,7 @@ def main():
             log_df = pd.DataFrame(st.session_state.logs)
             st.dataframe(log_df, use_container_width=True, hide_index=True)
         else:
-            st.info("Click 'Start Live Simulation' to begin monitoring.")
+            st.info("Click 'Start Live Detection' to begin monitoring.")
 
         # NEW: View Synthetic Data Button
         if st.session_state.last_synthetic_df is not None:
@@ -547,7 +629,8 @@ def main():
                 
                 if missing_features:
                     st.error(f"⚠️ Missing {len(missing_features)} required features. Please ensure the CSV matches the training dataset structure.")
-                    st.write("Missing:", missing_features[:5])
+                    with st.expander("View Missing Features"):
+                        st.write(missing_features)
                 else:
                     if st.button("🔍 Analyze Batch", type="primary"):
                         with st.spinner("Processing Data Through CNN-LSTM..."):
