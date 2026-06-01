@@ -1,14 +1,40 @@
-streamlit>=1.28.0
-tensorflow>=2.13.0
-numpy>=1.24.0
-pandas>=2.0.0
-scikit-learn>=1.3.0
-joblib>=1.3.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-plotly>=5.15.0
-pillow>=10.0.0
-shap>=0.42.0
-lime>=0.2.0
-imbalanced-learn>=0.11.0
+# =============================================================================
+# REQUIREMENTS FOR CNN-LSTM IDS WITH DUAL XAI
+# Developed by: Samuel Ayorinde A (PGD Cybersecurity, NDA)
+# Supervisor: Mr Victor Akuboh
+# =============================================================================
+
+# Core dependencies with NumPy < 2.0 (critical for TensorFlow)
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<2.3.0
+
+# TensorFlow ecosystem (compatible versions)
+tensorflow==2.14.0
+tensorflow-estimator==2.14.0
+keras==2.14.0
+
+# Streamlit for dashboard
+streamlit>=1.28.0,<1.35.0
+
+# Machine Learning & Data Processing
+scikit-learn>=1.3.0,<1.5.0
+joblib>=1.3.0,<1.4.0
+imbalanced-learn>=0.11.0,<0.13.0
+
+# XAI Libraries
+shap>=0.42.0,<0.45.0
+lime>=0.2.0,<0.3.0
+
+# Visualization
+matplotlib>=3.7.0,<3.9.0
+seaborn>=0.12.0,<0.14.0
+plotly>=5.15.0,<6.0.0
+pillow>=10.0.0,<11.0.0
+
+# Utilities
 protobuf>=3.20.0,<3.21.0
+pyarrow>=14.0.0,<15.0.0
+
+# Development tools (optional)
+ipython>=8.0.0,<9.0.0
+tqdm>=4.65.0,<5.0.0
